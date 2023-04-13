@@ -9,3 +9,67 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model User {
+  id             String   @id @default(uuid())
+  admin          Boolean
+  firstName      String
+  lastName       String
+  email          String   @unique
+  password       String
+  githubUsername String?
+  linkedinId     String?
+  cvUrl          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // One-to-many relation with Project
+  projects        Project[]
+  // One-to-many relation with Course
+  courses         Course[]
+  // One-to-many relation with WorkExperience
+  workExperiences WorkExperience[]
+}
+
+model Project {
+  id          String   @id @default(uuid())
+  name        String
+  description String
+  url         String
+  githubUrl   String
+  ownerId     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // One-to-many relation with User
+  owner User @relation(fields: [ownerId], references: [id])
+}
+
+model Course {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  grade       Float?
+  term        String
+  ownerId     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // One-to-many relation with User
+  owner User @relation(fields: [ownerId], references: [id])
+}
+
+model WorkExperience {
+  id          String    @id @default(uuid())
+  companyName String
+  position    String
+  description String?
+  startDate   DateTime
+  endDate     DateTime?
+  ownerId     String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // One-to-many relation with User
+  owner User @relation(fields: [ownerId], references: [id])
+}

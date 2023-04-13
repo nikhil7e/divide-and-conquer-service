@@ -1,18 +1,7 @@
 import express, { Request, Response } from 'express';
-import {
-  createCourse,
-  deleteCourse,
-  getCourse,
-  listCourses,
-  updateCourse,
-} from './courses.js';
-import {
-  createDepartment,
-  deleteDepartment,
-  getDepartment,
-  listDepartments,
-  updateDepartment,
-} from './departments.js';
+import { getCourses } from './canvasCourses.js';
+import { createCourse, deleteCourse, getCourse, listCourses, updateCourse } from './courses.js';
+import { createDepartment, deleteDepartment, getDepartment, listDepartments, updateDepartment } from './departments.js';
 
 export const router = express.Router();
 
@@ -39,6 +28,7 @@ export async function index(req: Request, res: Response) {
 
 // Departments
 router.get('/', index);
+router.get('/courses', getCourses);
 router.get('/departments', listDepartments);
 router.post('/departments', createDepartment);
 router.get('/departments/:slug', getDepartment);
