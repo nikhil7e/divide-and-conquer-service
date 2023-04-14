@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express';
-import { getCourses } from './canvasCourses.js';
 import { createCourse, deleteCourse, getCourse, listCourses, updateCourse } from './courses.js';
 import { createDepartment, deleteDepartment, getDepartment, listDepartments, updateDepartment } from './departments.js';
+import { createQuestion } from './question.js';
 
 export const router = express.Router();
 
@@ -28,7 +28,6 @@ export async function index(req: Request, res: Response) {
 
 // Departments
 router.get('/', index);
-router.get('/courses', getCourses);
 router.get('/departments', listDepartments);
 router.post('/departments', createDepartment);
 router.get('/departments/:slug', getDepartment);
@@ -41,3 +40,6 @@ router.post('/departments/:slug/courses', createCourse);
 router.get('/departments/:slug/courses/:courseId', getCourse);
 router.patch('/departments/:slug/courses/:courseId', updateCourse);
 router.delete('/departments/:slug/courses/:courseId', deleteCourse);
+
+// music
+router.get('/generate-melody', createQuestion);
