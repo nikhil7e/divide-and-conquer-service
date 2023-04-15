@@ -40,3 +40,17 @@ model Question {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+model Country {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  resources   Int
+  gameState   GameState @relation(fields: [gameStateId], references: [id])
+  gameStateId Int
+}
+
+model GameState {
+  id        Int       @id @default(autoincrement())
+  countries Country[]
+  turn      Int       @default(1)
+}
