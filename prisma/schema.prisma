@@ -42,15 +42,18 @@ model Question {
 }
 
 model Country {
-  id          Int       @id @default(autoincrement())
-  name        String    @unique
-  resources   Int
-  gameState   GameState @relation(fields: [gameStateId], references: [id])
-  gameStateId Int
+  id              Int         @id @default(autoincrement())
+  name            String      @unique
+  resources       Int
+  gameState       GameState   @relation(fields: [gameStateId], references: [id])
+  gameStateId     Int
+  playerGameState GameState[] @relation("playerCountry")
 }
 
 model GameState {
-  id        Int       @id @default(autoincrement())
-  countries Country[]
-  turn      Int       @default(1)
+  id              Int       @id @default(autoincrement())
+  countries       Country[]
+  playerCountry   Country?  @relation("playerCountry", fields: [playerCountryId], references: [id])
+  playerCountryId Int?
+  turn            Int       @default(1)
 }

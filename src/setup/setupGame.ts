@@ -11,6 +11,9 @@ async function seedDatabase() {
     data: { turn: 1 },
   });
 
+  const randomIndex = Math.floor(Math.random() * countries.length);
+  const playerCountryName = countries[randomIndex];
+
   for (const country of countries) {
     const newCountry = await prisma.country.create({
       data: {
@@ -20,6 +23,14 @@ async function seedDatabase() {
       },
     });
     console.log(`Created ${newCountry.name}`);
+
+    if (country === playerCountryName) {
+      await prisma.gameState.update({
+        where: { id: gameState.id },
+        data: { playerCountry: { connect: { id: newCountry.id } } },
+      });
+      console.log(`Assigned ${newCountry.name} as player's home country`);
+    }
   }
 
   console.log('Finished seeding the database!');
