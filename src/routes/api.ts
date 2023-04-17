@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express';
 import { createCourse, deleteCourse, getCourse, listCourses, updateCourse } from './courses.js';
 import { createDepartment, deleteDepartment, getDepartment, listDepartments, updateDepartment } from './departments.js';
-import { getGamestate } from './game.js';
+import { getGamestate, handleTurn } from './game.js';
 import { createQuestion } from './question.js';
 
 export const router = express.Router();
@@ -47,3 +47,4 @@ router.get('/generate-melody', createQuestion);
 
 // game
 router.get('/gamestate', getGamestate);
+router.post('/turn', handleTurn);
