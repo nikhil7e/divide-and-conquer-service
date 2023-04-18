@@ -19,6 +19,7 @@ async function seedDatabase() {
       data: {
         name: country,
         resources: Math.floor(Math.random() * 100),
+        troops: Math.floor(Math.random() * 50),
         gameState: { connect: { id: gameState.id } },
       },
     });

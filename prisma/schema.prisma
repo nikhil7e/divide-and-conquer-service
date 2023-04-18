@@ -42,12 +42,21 @@ model Question {
 }
 
 model Country {
-  id              Int         @id @default(autoincrement())
-  name            String      @unique
-  resources       Int
-  gameState       GameState   @relation(fields: [gameStateId], references: [id])
-  gameStateId     Int
-  playerGameState GameState[] @relation("playerCountry")
+  id                  Int         @id @default(autoincrement())
+  name                String      @unique
+  resources           Int
+  troops              Int
+  allies              Country[]   @relation("relationships")
+  allyCountryIds      Int[]
+  enemies             Country[]   @relation("relationships")
+  enemyCountryIds     Int[]
+  conqueredCountries  Country[]   @relation("conqueredBy")
+  conqueredCountryIds Int[]
+  conqueringCountry   Country?    @relation("conqueredBy", fields: [conqueringCountryId], references: [id])
+  conqueringCountryId Int?
+  gameState           GameState   @relation(fields: [gameStateId], references: [id])
+  gameStateId         Int
+  playerGameState     GameState[] @relation("playerCountry")
 }
 
 model GameState {
