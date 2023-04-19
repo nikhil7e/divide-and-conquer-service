@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "nodemon",
     "start": "node --loader ts-node/esm ./src/app.ts",
-    "setup": "node --loader ts-node/esm ./src/setup/setup.ts",
+    "setup": "npx prisma migrate reset -f && npx prisma migrate deploy && npx prisma generate",
     "setupGame": "npx prisma migrate reset --force && node --loader ts-node/esm ./src/setup/setupGame.ts",
     "lint": "eslint ./src"
   },
