@@ -1,0 +1,15 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "name": "Debug Express App",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "runtimeExecutable": "nodemon",
+      "runtimeArgs": ["--inspect-brk=0.0.0.0:9229", "app.js"],
+      "restart": true,
+      "timeout": 30000
+    }
+  ]
+}
