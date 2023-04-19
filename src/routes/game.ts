@@ -1,22 +1,54 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, User } from '@prisma/client';
 import { Request, Response } from 'express';
+import { seedDatabase } from '../setup/setupGame.js';
+import { requireAuthentication } from './users.js';
 
 const prisma = new PrismaClient();
 
-export async function getGamestate(req: Request, res: Response) {
+export async function handleReset(req: Request, res: Response) {
+  const user = req.user as User;
+  const gameState = await prisma.gameState.delete({
+    where: { userId: user.id },
+    include: { countries: true, playerCountry: true },
+  });
+
+  if (!gameState) {
+    return res.status(500).json({ errors: 'Unsuccesfully reset game state' });
+  }
+
+  await seedDatabase(user.id);
+
+  return res.status(204).json({ message: 'Succesfully reset game state' });
+}
+
+export const reset = [requireAuthentication, handleReset];
+
+export async function getGamestateForUser(req: Request, res: Response) {
+  const user = req.user as User;
   const gameState = await prisma.gameState.findUnique({
-    where: { id: 1 },
+    where: { userId: user.id },
     include: { countries: true, playerCountry: true },
   });
 
   return res.status(200).json(gameState);
 }
 
-export async function handleTurn(req: Request, res: Response) {
+export const getGamestate = [requireAuthentication, getGamestateForUser];
+
+export async function handleTurnForUser(req: Request, res: Response) {
   const { action, countryName, selectedCountryName, gameStateId } = req.body;
 
-  const country = await prisma.country.findUnique({ where: { name: countryName } });
-  const selectedCountry = await prisma.country.findUnique({ where: { name: selectedCountryName } });
+  const country = await prisma.country.findFirst({
+    where: {
+      AND: [{ name: countryName }, { gameStateId }],
+    },
+  });
+
+  const selectedCountry = await prisma.country.findFirst({
+    where: {
+      AND: [{ name: selectedCountryName }, { gameStateId }],
+    },
+  });
 
   if (!country) {
     throw new Error(`Country ${countryName} not found`);
@@ -99,14 +131,13 @@ export async function handleTurn(req: Request, res: Response) {
           if (attackerIsDefeated.troops === 0) {
             // Game over
 
-            // await prisma.gameState.update({
-            //   where: { id: gameStateId },
-            //   data: { message: `Game over! ${countryName} has been defeated.` },
-            // });
+            const lossGameState = await prisma.gameState.update({
+              where: { id: gameStateId },
+              data: { active: false },
+              include: { countries: true, playerCountry: true },
+            });
 
-            return res
-              .status(200)
-              .json({ message: `Game over! Your country ${countryName} lost against ${selectedCountryName}` });
+            return res.status(200).json(lossGameState);
           }
         }
       }
@@ -159,9 +190,70 @@ export async function handleTurn(req: Request, res: Response) {
     WHERE id = ANY(${otherCountryIds}::int[])
     `;
 
+  //   await prisma.$executeRaw`
+  //   UPDATE "Country"
+  //   SET resources =
+  //     CASE
+  //       WHEN random_action = 'buildArmy' THEN current_country.resources - 10
+  //       WHEN random_action = 'buildCity' THEN current_country.resources - 20
+  //       WHEN random_action = 'research' THEN current_country.resources - 30
+  //       WHEN random_action = 'attack' THEN current_country.resources - 10
+  //       ELSE current_country.resources
+  //     END,
+  //     troops =
+  //     CASE
+  //       WHEN random_action = 'buildArmy' THEN current_country.troops + 5
+  //       WHEN random_action = 'attack' THEN
+  //         CASE
+  //           WHEN random() < 0.7 THEN current_country.troops - FLOOR(0.7 * current_country.troops)
+  //           ELSE current_country.troops
+  //         END
+  //       ELSE current_country.troops
+  //     END,
+  //     "conqueredCountryIds" =
+  //     CASE
+  //       WHEN random_action = 'attack' AND random() < 0.7 THEN array_append(current_country."conqueredCountryIds", attacked_country.id)
+  //       ELSE current_country."conqueredCountryIds"
+  //     END,
+  //     enemies =
+  //     CASE
+  //       WHEN random_action = 'attack' AND random() >= 0.7 THEN array_append(current_country.enemies, attacked_country.id)
+  //       ELSE current_country.enemies
+  //     END,
+  //     "conqueringCountry" =
+  //     CASE
+  //       WHEN random_action = 'attack' AND random() < 0.7 THEN current_country.id
+  //       ELSE current_country."conqueringCountry"
+  //     END
+  //   FROM (
+  //     SELECT
+  //       current_country.id,
+  //       CASE
+  //         WHEN random() < 0.25 THEN 'buildArmy'
+  //         WHEN random() >= 0.25 AND random() < 0.5 THEN 'buildCity'
+  //         WHEN random() >= 0.5 AND random() < 0.75 THEN 'research'
+  //         WHEN random() >= 0.75 THEN 'attack'
+  //       END AS random_action,
+  //       (
+  //         SELECT id
+  //         FROM "Country"
+  //         WHERE id != current_country.id
+  //         ORDER BY random()
+  //         LIMIT 1
+  //       ) AS attacked_country_id
+  //     FROM "Country" AS current_country
+  //     WHERE name != ${countryName} AND name != ${selectedCountryName}
+  //   ) AS random_actions
+  //   JOIN "Country" AS current_country ON current_country.id = random_actions.id
+  //   JOIN "Country" AS attacked_country ON attacked_country.id = random_actions.attacked_country_id
+  //   WHERE "Country".id = random_actions.id;
+  // `;
+
   await prisma.gameState.update({
     where: { id: gameStateId },
-    data: { turn: { increment: 1 } },
+    data: {
+      turn: { increment: 1 },
+    },
   });
 
   // Get updated game state
@@ -172,3 +264,5 @@ export async function handleTurn(req: Request, res: Response) {
 
   return res.status(200).json(gameState);
 }
+
+export const handleTurn = [requireAuthentication, handleTurnForUser];

@@ -11,39 +11,9 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id                  String     @id @default(uuid())
-  admin               Boolean    @default(false)
-  username            String     @unique
-  password            String
-  answeredQuestionIds Int[]
-  answeredQuestions   Question[] @relation(name: "Questions")
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Question {
-  id              String @id @default(uuid())
-  imageUrl        String
-  latitude        Float
-  longitude       Float
-  country         String
-  fCodeName       String
-  toponymName     String
-  closestPlace    String
-  population      Int
-  featureClass    String
-  answeredUserIds Int[]
-  answeredUsers   User[] @relation(name: "Questions")
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
 model Country {
   id                  Int         @id @default(autoincrement())
-  name                String      @unique
+  name                String
   resources           Int
   troops              Int
   allies              Country[]   @relation("relationships")
@@ -54,15 +24,37 @@ model Country {
   conqueredCountryIds Int[]
   conqueringCountry   Country?    @relation("conqueredBy", fields: [conqueringCountryId], references: [id])
   conqueringCountryId Int?
-  gameState           GameState   @relation(fields: [gameStateId], references: [id])
+  gameState           GameState   @relation(fields: [gameStateId], references: [id], onDelete: Cascade)
   gameStateId         Int
   playerGameState     GameState[] @relation("playerCountry")
+
+  createdAt DateTime? @default(now())
+  updatedAt DateTime? @updatedAt
+
+  @@unique([name, gameStateId])
 }
 
 model GameState {
   id              Int       @id @default(autoincrement())
   countries       Country[]
-  playerCountry   Country?  @relation("playerCountry", fields: [playerCountryId], references: [id])
+  playerCountry   Country?  @relation("playerCountry", fields: [playerCountryId], references: [id], onDelete: Cascade)
   playerCountryId Int?
   turn            Int       @default(1)
+  user            User      @relation(fields: [userId], references: [id])
+  userId          Int       @unique
+  active          Boolean   @default(true)
+
+  createdAt DateTime? @default(now())
+  updatedAt DateTime? @updatedAt
+}
+
+model User {
+  id        Int        @id @default(autoincrement())
+  username  String     @unique
+  password  String
+  gameState GameState?
+
+  gameStateId Int?
+  createdAt   DateTime? @default(now())
+  updatedAt   DateTime? @updatedAt
 }
